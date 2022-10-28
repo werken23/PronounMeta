@@ -1,0 +1,7 @@
+name: PronounMeta
+version: 0.1
+main: nl.engeserver.PronounMeta.Main
+api-version: 1.19
+author: werken23
+website: https://www.engeserver.nl
+depend: [LuckPerms]
