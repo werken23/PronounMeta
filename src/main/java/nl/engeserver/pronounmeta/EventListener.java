@@ -38,13 +38,12 @@ public class EventListener implements Listener {
 
                 this.responseContent = response.toString();
             } else {
-                System.out.println("GET request not worked");
+                System.out.println("GET request did not work");
             }
             http.disconnect();
 
-            String pronoun;
             String[] array = responseContent.split("\"");
-            pronoun = switch (array[3]) {
+            String pronoun = switch (array[3]) {
                 case "unspecified" -> "Unspecified";
                 case "hh" -> "He/Him";
                 case "hi" -> "He/It";
@@ -68,7 +67,7 @@ public class EventListener implements Listener {
                 case "avoid" -> "Avoid Pronouns";
                 default -> "Error";
             };
-
+            //TODO only edit meta if different
             RegisteredServiceProvider<LuckPerms> provider = Bukkit.getServicesManager().getRegistration(LuckPerms.class);
             if (provider != null) {
                 this.api = provider.getProvider();
