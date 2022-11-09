@@ -30,7 +30,7 @@ public class EventListener implements Listener {
             if (http.getResponseCode() == HttpURLConnection.HTTP_OK) {
                 BufferedReader in = new BufferedReader(new InputStreamReader(http.getInputStream()));
                 String inputLine;
-                StringBuffer response = new StringBuffer();
+                StringBuilder response = new StringBuilder();
 
                 while ((inputLine = in .readLine()) != null) {
                     response.append(inputLine);
