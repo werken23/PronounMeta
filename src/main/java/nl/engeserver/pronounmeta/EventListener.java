@@ -22,6 +22,7 @@ public class EventListener implements Listener {
     private LuckPerms api;
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
+        // grab pronoun from pronoundb API
         try {
             URL url = new URL("https://pronoundb.org/api/v1/lookup?platform=minecraft&id=" + event.getPlayer().getUniqueId());
             HttpURLConnection http = (HttpURLConnection) url.openConnection();
@@ -42,6 +43,7 @@ public class EventListener implements Listener {
             }
             http.disconnect();
 
+            // translate grabbed data to string
             String[] array = responseContent.split("\"");
             String pronoun = switch (array[3]) {
                 case "unspecified" -> "Unspecified";
@@ -67,19 +69,25 @@ public class EventListener implements Listener {
                 case "avoid" -> "Avoid Pronouns";
                 default -> "Error";
             };
-            //TODO only edit meta if different
             RegisteredServiceProvider<LuckPerms> provider = Bukkit.getServicesManager().getRegistration(LuckPerms.class);
             if (provider != null) {
                 this.api = provider.getProvider();
             }
             User user = api.getUserManager().getUser(event.getPlayer().getUniqueId());
-            MetaNode node = MetaNode.builder("pronouns", pronoun).build();
-            if (user != null) {
-                user.data().clear(NodeType.META.predicate(mn -> mn.getMetaKey().equals("pronouns")));
-                user.data().add(node);
-                api.getUserManager().saveUser(user);
-            }
+            String pronounOld = user.getCachedData().getMetaData().getMetaValue("pronouns");
 
+            // update pronoun if different
+            if (pronounOld.equals(pronoun)) {
+                System.out.println(event.getPlayer().getName() + " already has \"" + pronounOld + "\".");
+            } else {
+                MetaNode node = MetaNode.builder("pronouns", pronoun).build();
+                if (user != null) {
+                    user.data().clear(NodeType.META.predicate(mn -> mn.getMetaKey().equals("pronouns")));
+                    user.data().add(node);
+                    api.getUserManager().saveUser(user);
+                    System.out.println("Changed " + event.getPlayer().getName() + "'s pronouns from \"" + pronounOld + "\" to \"" + user.getCachedData().getMetaData().getMetaValue("pronouns") + "\"!");
+                }
+            }
         } catch (IOException e) {
             e.printStackTrace();
             Bukkit.broadcastMessage(event.getPlayer().getName() + "error");
