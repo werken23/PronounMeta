@@ -24,7 +24,7 @@ public class EventListener implements Listener {
     public void onPlayerJoin(PlayerJoinEvent event) {
         // grab pronoun from pronoundb API
         try {
-            URL url = new URL("https://pronoundb.org/api/v1/lookup?platform=minecraft&id=" + event.getPlayer().getUniqueId());
+            URL url = new URL("https://pronoundb.org/api/v2/lookup?platform=minecraft&ids=" + event.getPlayer().getUniqueId());
             HttpURLConnection http = (HttpURLConnection) url.openConnection();
             http.setRequestMethod("GET");
 
@@ -44,31 +44,22 @@ public class EventListener implements Listener {
             http.disconnect();
 
             // translate grabbed data to string
-            String[] array = responseContent.split("\"");
-            String pronoun = switch (array[3]) {
-                case "unspecified" -> "Unspecified";
-                case "hh" -> "He/Him";
-                case "hi" -> "He/It";
-                case "hs" -> "He/She";
-                case "ht" -> "He/They";
-                case "ih" -> "It/Him";
-                case "ii" -> "It/Its";
-                case "is" -> "It/She";
-                case "it" -> "It/They";
-                case "shh" -> "She/He";
-                case "sh" -> "She/Het";
-                case "si" -> "She/It";
-                case "st" -> "She/They";
-                case "th" -> "They/He";
-                case "ti" -> "They/It";
-                case "ts" -> "They/She";
-                case "tt" -> "They/Them";
-                case "any" -> "Any Pronouns";
-                case "other" -> "Other Pronouns";
-                case "ask" -> "Ask Pronouns";
-                case "avoid" -> "Avoid Pronouns";
-                default -> "Error";
-            };
+            if (responseContent.equals("{}")) {return;} //TODO remove meta
+            String[] array1 = responseContent.split("\"sets\"");
+            if (array1[1].equals(":{}}}")) {return;} //TODO remove meta
+            String[] array2 = array1[1].split(":");
+            String string1 = array2[2].replaceAll("[\\[\\]\\}]","");
+            String[] array3 = string1.split("\"");
+            String pronoun = "";
+            for (String a:array3) {
+                if (a.equals(",")) {
+                    pronoun = pronoun + "/";
+                } else if (!a.isEmpty()) {
+                    String b = a.substring(0, 1).toUpperCase() + a.substring(1);
+                    pronoun = pronoun + b;
+                }
+            }
+
             RegisteredServiceProvider<LuckPerms> provider = Bukkit.getServicesManager().getRegistration(LuckPerms.class);
             if (provider != null) {
                 this.api = provider.getProvider();
