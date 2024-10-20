@@ -56,15 +56,15 @@ public class EventListener implements Listener {
                 return;
             }
             String[] array2 = array1[1].split(":");
-            String string1 = array2[2].replaceAll("[\\[\\]\\}]","");
+            String string1 = array2[2].replaceAll("[\\[\\]}]","");
             String[] array3 = string1.split("\"");
-            String pronoun = "";
+            StringBuilder pronoun = new StringBuilder();
             for (String a:array3) {
                 if (a.equals(",")) {
-                    pronoun = pronoun + "/";
+                    pronoun.append("/");
                 } else if (!a.isEmpty()) {
                     String b = a.substring(0, 1).toUpperCase() + a.substring(1);
-                    pronoun = pronoun + b;
+                    pronoun.append(b);
                 }
             }
 
