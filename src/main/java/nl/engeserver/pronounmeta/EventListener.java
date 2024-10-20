@@ -6,6 +6,7 @@ import net.luckperms.api.node.NodeType;
 import net.luckperms.api.node.types.MetaNode;
 
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -16,6 +17,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Objects;
 
 public class EventListener implements Listener {
     private String responseContent;
@@ -44,9 +46,15 @@ public class EventListener implements Listener {
             http.disconnect();
 
             // translate grabbed data to string
-            if (responseContent.equals("{}")) {return;} //TODO remove meta
+            if (responseContent.equals("{}")) {
+                metaSet(event.getPlayer(), "Undefined");
+                return;
+            }
             String[] array1 = responseContent.split("\"sets\"");
-            if (array1[1].equals(":{}}}")) {return;} //TODO remove meta
+            if (array1[1].equals(":{}}}")) {
+                metaSet(event.getPlayer(), "Undefined");
+                return;
+            }
             String[] array2 = array1[1].split(":");
             String string1 = array2[2].replaceAll("[\\[\\]\\}]","");
             String[] array3 = string1.split("\"");
@@ -60,28 +68,32 @@ public class EventListener implements Listener {
                 }
             }
 
-            RegisteredServiceProvider<LuckPerms> provider = Bukkit.getServicesManager().getRegistration(LuckPerms.class);
-            if (provider != null) {
-                this.api = provider.getProvider();
-            }
-            User user = api.getUserManager().getUser(event.getPlayer().getUniqueId());
-            String pronounOld = user.getCachedData().getMetaData().getMetaValue("pronouns");
+            metaSet(event.getPlayer(), pronoun.toString());
 
-            // update pronoun if different
-            if (pronounOld.equals(pronoun)) {
-                System.out.println(event.getPlayer().getName() + " already has \"" + pronounOld + "\".");
-            } else {
-                MetaNode node = MetaNode.builder("pronouns", pronoun).build();
-                if (user != null) {
-                    user.data().clear(NodeType.META.predicate(mn -> mn.getMetaKey().equals("pronouns")));
-                    user.data().add(node);
-                    api.getUserManager().saveUser(user);
-                    System.out.println("Changed " + event.getPlayer().getName() + "'s pronouns from \"" + pronounOld + "\" to \"" + user.getCachedData().getMetaData().getMetaValue("pronouns") + "\"!");
-                }
-            }
+
         } catch (IOException e) {
             e.printStackTrace();
             Bukkit.broadcastMessage(event.getPlayer().getName() + "error");
+        }
+    }
+
+    private void metaSet(Player player, String pronoun) {
+        RegisteredServiceProvider<LuckPerms> provider = Bukkit.getServicesManager().getRegistration(LuckPerms.class);
+        if (provider != null) {
+            this.api = provider.getProvider();
+        }
+        User user = api.getUserManager().getUser(player.getUniqueId());
+        String pronounOld = user.getCachedData().getMetaData().getMetaValue("pronouns");
+
+        // update pronoun if different
+        if (Objects.equals(pronounOld, pronoun)) {
+            System.out.println(player.getName() + " already has \"" + pronounOld + "\".");
+        } else {
+            MetaNode node = MetaNode.builder("pronouns", pronoun).build();
+            user.data().clear(NodeType.META.predicate(mn -> mn.getMetaKey().equals("pronouns")));
+            user.data().add(node);
+            api.getUserManager().saveUser(user);
+            System.out.println("Changed " + player.getName() + "'s pronouns from \"" + pronounOld + "\" to \"" + user.getCachedData().getMetaData().getMetaValue("pronouns") + "\"!");
         }
     }
 }
